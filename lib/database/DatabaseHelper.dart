@@ -59,4 +59,11 @@ class DatabaseHelper {
     List<Map<String, dynamic>> result = await db.query('users', where: 'username = ?', whereArgs: [username]);
     return result.isNotEmpty;
   }
+
+  Future<bool> checkLogin(String username, String password) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result = await db.query('users', where: 'username = ? AND password = ?', whereArgs: [username, password]);
+
+    return result.isNotEmpty;
+  }
 }

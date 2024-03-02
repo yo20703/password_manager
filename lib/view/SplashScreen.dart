@@ -6,6 +6,11 @@ class SplashScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => LoginRegisterScreen()));
+    });
+
     return Scaffold(
       body: Center(
         child: Column(
@@ -23,19 +28,6 @@ class SplashScreen extends StatelessWidget{
                     fontSize: 24,
                     fontWeight: FontWeight.bold
                 ),
-
-              ),
-              SizedBox(height: 20.0),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => LoginRegisterScreen()
-                      )
-                  );
-                },
-                child: Text('開始使用'),
               ),
             ]
         ),
