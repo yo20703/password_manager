@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:password_manager/database/DatabaseHelper.dart';
 
 class HomeScreen extends StatefulWidget {
+  final String username;
+  final int userId;
+  HomeScreen({required this.username, required this.userId});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState(username: username, userId: userId);
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final String username;
+  final int userId;
+
+  _HomeScreenState({required this.username, required this.userId});
+
   List<Map<String, dynamic>> _passwords = [];
 
   List<Map<String, dynamic>> _filteredPasswords = [];
 
   TextEditingController _searchController = TextEditingController();
 
-  void _loadPasswords() {
-    _passwords = [
-      {'id': 1, 'title': '網站A', 'username': 'userA', 'password': 'passwordA'},
-      {'id': 2, 'title': '網站B', 'username': 'userB', 'password': 'passwordB'},
-      {'id': 3, 'title': '網站C', 'username': 'userC', 'password': 'passwordC'},
-    ];
+  void _loadPasswords() async {
+    List<Map<String, dynamic>> passwords = await DatabaseHelper.instance.getPasswordsByUserId(userId);
+    _passwords = passwords;
+    _searchPassword(_searchController.text);
   }
 
   void _searchPassword(String keyword) {
@@ -31,6 +39,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   .contains(keyword.toLowerCase()))
           .toList();
     });
+  }
+
+  void _addPassword(Map<String, dynamic> password) async {
+    int insertPassword = await DatabaseHelper.instance.insertPassword(password);
+    _passwords = await DatabaseHelper.instance.getPasswordsByUserId(userId);
+    _filteredPasswords = _passwords;
+    _searchPassword(_searchController.text);
   }
 
   void _showEditPasswordDialog(Map<String, dynamic> password) {
@@ -96,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAddPasswordDialog() {
     Map<String, dynamic> password =
-    {'id': 0, 'title': '', 'username': '', 'password': ''};
+    {'user_id': userId, 'title': '', 'username': '', 'password': '', 'description': ''};
 
     showDialog(
         context: context,
@@ -143,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               TextButton(onPressed: () {
                 //todo 新增到陣列內
-                password['id'] = _passwords.length;
                 _addPassword(password);
                 Navigator.of(context).pop();
 
@@ -153,13 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
     );
-  }
-
-  void _addPassword(Map<String, dynamic> password) {
-    setState(() {
-      _passwords.add(password);
-      _filteredPasswords = _passwords;
-    });
   }
 
   @override

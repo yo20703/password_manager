@@ -10,11 +10,12 @@ class LoginRegisterScreen extends StatelessWidget {
   void _login(BuildContext context) async {
     String username = _usernameController.text;
     String password = _passwordController.text;
+    int userId = await DatabaseHelper.instance.checkLogin(username, password);
+    bool isLogin = userId != -1;
 
-    bool isLogin = await DatabaseHelper.instance.checkLogin(username, password);
     if (isLogin) {
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => HomeScreen()));
+          MaterialPageRoute(builder: (context) => HomeScreen(username: username, userId: userId)));
     } else {
       //fail
       ScaffoldMessenger.of(context).showSnackBar(

@@ -32,6 +32,8 @@ class DatabaseHelper {
       CREATE TABLE passwords(
         id INTEGER PRIMARY KEY,
         user_id INTEGER,
+        title TEXT,
+        username TEXT,
         password TEXT,
         description TEXT,
         FOREIGN KEY(user_id) REFERENCES users(id)
@@ -54,16 +56,25 @@ class DatabaseHelper {
     return await db.query('passwords', where: 'user_id = ?', whereArgs: [userId]);
   }
 
+  Future<List<Map<String, dynamic>>> getPasswordsByUserName(String username) async {
+    Database db = await instance.database;
+    return await db.query('passwords', where: 'username = ?', whereArgs: [username]);
+  }
+
   Future<bool> checkUsernameExists(String username) async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result = await db.query('users', where: 'username = ?', whereArgs: [username]);
     return result.isNotEmpty;
   }
 
-  Future<bool> checkLogin(String username, String password) async {
+  Future<int> checkLogin(String username, String password) async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result = await db.query('users', where: 'username = ? AND password = ?', whereArgs: [username, password]);
 
-    return result.isNotEmpty;
+    if (result.isEmpty) {
+      return -1;
+    } else {
+      return result[0]['id'];
+    }
   }
 }
