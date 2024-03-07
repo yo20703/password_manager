@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:password_manager/database/DatabaseHelper.dart';
 
@@ -110,63 +112,177 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddPasswordDialog() {
-    Map<String, dynamic> password =
-    {'user_id': userId, 'title': '', 'username': '', 'password': '', 'description': ''};
+    Map<String, dynamic> password = {
+      'user_id': userId,
+      'title': '',
+      'username': '',
+      'password': '',
+      'description': '',
+    };
+
+    TextEditingController _passwordController = TextEditingController();
+
+    int passwordLength = 12;
+    bool includeUppercase = true;
+    bool includeLowercase = true;
+    bool includeNumbers = true;
+    bool includeSymbols = true;
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('新增密碼'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: '網站名稱'
-                  ),
-
-                  onChanged: (value){
-                    //todo 更改網站名稱
-                    password['title'] = value;
-                  },
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('新增密碼'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: '網站名稱',
+                      ),
+                      onChanged: (value) {
+                        password['title'] = value;
+                      },
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: '使用者名稱',
+                      ),
+                      onChanged: (value) {
+                        password['username'] = value;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: '密碼',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.refresh),
+                          onPressed: () {
+                            setState(() {
+                              password['password'] = _generateRandomPassword(
+                                passwordLength,
+                                includeUppercase,
+                                includeLowercase,
+                                includeNumbers,
+                                includeSymbols,
+                              );
+                              _passwordController.text = password['password'];
+                            });
+                          },
+                        ),
+                      ),
+                      onChanged: (value) {
+                        password['password'] = value;
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('密碼長度'),
+                        DropdownButton<int>(
+                          value: passwordLength,
+                          onChanged: (int? value) {
+                            setState(() {
+                              passwordLength = value!;
+                            });
+                          },
+                          items: List.generate(21, (index) => index + 5)
+                              .map((length) {
+                            return DropdownMenuItem<int>(
+                              value: length,
+                              child: Text(length.toString()),
+                            );
+                          })
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                    CheckboxListTile(
+                      title: Text('包含英文大寫'),
+                      value: includeUppercase,
+                      onChanged: (value) {
+                        setState(() {
+                          includeUppercase = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('包含英文小寫'),
+                      value: includeLowercase,
+                      onChanged: (value) {
+                        setState(() {
+                          includeLowercase = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('包含數字'),
+                      value: includeNumbers,
+                      onChanged: (value) {
+                        setState(() {
+                          includeNumbers = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('包含符號'),
+                      value: includeSymbols,
+                      onChanged: (value) {
+                        setState(() {
+                          includeSymbols = value!;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                      labelText: '使用者名稱'
-                  ),
-
-                  onChanged: (value){
-                    password['username'] = value;
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
                   },
+                  child: Text('取消'),
                 ),
-                TextFormField(
-                  decoration: InputDecoration(
-                      labelText: '密碼'
-                  ),
-
-                  onChanged: (value){
-                    password['password'] = value;
+                TextButton(
+                  onPressed: () {
+                    _addPassword(password);
+                    Navigator.of(context).pop();
                   },
+                  child: Text('保存'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(onPressed: () {
-                Navigator.of(context).pop();
-              }, child: Text('取消')
-              ),
-              TextButton(onPressed: () {
-                //todo 新增到陣列內
-                _addPassword(password);
-                Navigator.of(context).pop();
-
-              }, child: Text('保存')
-              ),
-            ],
-          );
-        }
+            );
+          },
+        );
+      },
     );
+  }
+
+  String _generateRandomPassword(
+      int passwordLength,
+      bool includeUppercase,
+      bool includeLowercase,
+      bool includeNumber,
+      bool includeSymbols
+      ) {
+    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+    const numberChars = '0123456789';
+    const symbolChars = '!@#\$%^&*()_+=<>?';
+
+    String chars = '';
+    if (includeUppercase) chars += uppercaseChars;
+    if (includeLowercase) chars += lowercaseChars;
+    if (includeNumber) chars += numberChars;
+    if (includeSymbols) chars += symbolChars;
+
+    final random = Random.secure();
+
+    return List.generate(passwordLength, (index) => chars[random.nextInt(chars.length)]).join();
   }
 
   @override
